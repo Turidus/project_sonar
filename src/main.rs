@@ -1,5 +1,5 @@
 mod constants;
-mod basics;
+mod physics;
 
 
 fn main() {
