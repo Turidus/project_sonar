@@ -3,9 +3,10 @@ use std::cmp::Ordering;
 use std::fmt::{Display, Formatter};
 use std::fmt;
 use crate::constants::WORLD_ORIGIN;
+use crate::physics::coordinate_system::{WorldCoordSystem, CoordinateSystem};
 
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub struct PolarVec {
     r: f64, //radius in m and range 0..
     phi: f64, //azimut angle in degree and range 0..360
@@ -51,7 +52,7 @@ impl Ord for PolarVec {
 
 impl Display for PolarVec {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        write!(f, "[Radius: {:?} m, azimut angle Phi: {:?}°, polar angle Theta: {:?}°]", self.r, self.phi, self.theta)
+        write!(f, "[Radius: {:?} m, Phi (azimut): {:?}°, Theta (polar): {:?}°]", self.r, self.phi, self.theta)
     }
 }
 
@@ -87,8 +88,10 @@ impl PolarVec {
         other.theta - self.theta
     }
 
-    //Projects the given coordinates into unique coordinates.
-    //The final vector will be the same vector as the input vector, but expressed in a unique way.
+    //Transforms the given coordinates into unique coordinate system, to assure that two vectors
+    //that have the same physical properties have also the values.
+    //For example: (1,10,90), (1,370,90) and (1,370,270) are three different ways to describe the same vector.
+    //After transformation, these inputs would all have the values (1,10,90).
     fn get_uni_coords(mut r: f64, mut phi: f64, mut theta: f64) -> (f64,f64,f64) {
 
         if phi < 0.0 || phi >= 360.0 {
@@ -114,8 +117,26 @@ impl PolarVec {
 
         (r,phi,theta)
     }
+}
 
 
+pub struct VectorPoint<T> where T: CoordinateSystem {
+    cord_sys: T,
+    vector: PolarVec
+}
+
+impl<T: CoordinateSystem> VectorPoint<T> {
+    pub fn new (cord_sys: T, vector: PolarVec) -> VectorPoint<T>{
+        VectorPoint{cord_sys, vector}
+    }
+
+    pub fn get_cord_sys(&self) -> &T {
+        &self.cord_sys
+    }
+
+    pub fn get_vector(&self) -> &PolarVec {
+        &self.vector
+    }
 }
 
 #[cfg(test)]
