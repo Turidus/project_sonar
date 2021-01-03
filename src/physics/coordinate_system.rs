@@ -1,6 +1,4 @@
 use super::polar_vector::PolarVec;
-use crate::physics::polar_vector::VectorPoint;
-
 pub trait CoordinateSystem: {
     type CoSys;
 
@@ -36,7 +34,7 @@ impl CoordinateSystem for WorldCoordSystem {
 impl WorldCoordSystem {
     pub fn new() -> WorldCoordSystem {
         WorldCoordSystem {
-            id: "world".to_string(),
+            id: "wcs".to_string(),
             origin: PolarVec::get_world_origin()
         }
     }
