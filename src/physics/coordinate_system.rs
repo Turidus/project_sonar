@@ -42,14 +42,14 @@ impl WorldCoordSystem {
     }
 }
 #[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq)]
-pub struct GeneralCoordSystem<T>
+pub struct GeneralCoordSystem<'a, T>
     where T: CoordinateSystem {
     id: String,
-    parent_coord_system: T,
+    parent_coord_system: &'a T,
     origin: PolarVec
 }
 
-impl<T: CoordinateSystem> CoordinateSystem for GeneralCoordSystem<T>{
+impl<T: CoordinateSystem> CoordinateSystem for GeneralCoordSystem<'_, T>{
     type CoSys = T;
 
     fn get_id(&self) -> &String {
@@ -65,8 +65,8 @@ impl<T: CoordinateSystem> CoordinateSystem for GeneralCoordSystem<T>{
     }
 }
 
-impl<T: CoordinateSystem> GeneralCoordSystem<T>{
-    pub fn new(id: String, parent_coord_system: T, origin: PolarVec) -> GeneralCoordSystem<T>{
+impl<T: CoordinateSystem> GeneralCoordSystem<'_, T>{
+    pub fn new(id: String, parent_coord_system: &T, origin: PolarVec) -> GeneralCoordSystem<T> {
         GeneralCoordSystem{
             id,
             parent_coord_system,
@@ -100,7 +100,7 @@ mod tests {
     fn creation(){
         let wcs = WorldCoordSystem::new();
         let origin = PolarVec::new(10.0,90.0,90.0);
-        let gcs = GeneralCoordSystem::new("gcs".to_string(), wcs, origin);
+        let gcs = GeneralCoordSystem::new("gcs".to_string(), &wcs, origin);
 
         println!("{:?}", wcs);
         println!("{:?}", origin);
