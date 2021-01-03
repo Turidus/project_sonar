@@ -11,7 +11,7 @@ pub trait CoordinateSystem: {
     fn get_parent_coord_system(&self) -> Option<&Self::CoSys>;
 }
 
-#[derive(Debug, Ord, PartialOrd, Eq, PartialEq, Clone)]
+#[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq)]
 pub struct WorldCoordSystem {
     id: String,
     origin: PolarVec
@@ -41,12 +41,12 @@ impl WorldCoordSystem {
         }
     }
 }
-
+#[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq)]
 pub struct GeneralCoordSystem<T>
     where T: CoordinateSystem {
     id: String,
     parent_coord_system: T,
-    origin: VectorPoint<T>
+    origin: PolarVec
 }
 
 impl<T: CoordinateSystem> CoordinateSystem for GeneralCoordSystem<T>{
@@ -57,7 +57,7 @@ impl<T: CoordinateSystem> CoordinateSystem for GeneralCoordSystem<T>{
     }
 
     fn get_origin(&self) -> &PolarVec {
-        &self.origin.get_vector()
+        &self.origin
     }
 
     fn get_parent_coord_system(&self) -> Option<&Self::CoSys> {
@@ -65,9 +65,19 @@ impl<T: CoordinateSystem> CoordinateSystem for GeneralCoordSystem<T>{
     }
 }
 
+impl<T: CoordinateSystem> GeneralCoordSystem<T>{
+    pub fn new(id: String, parent_coord_system: T, origin: PolarVec) -> GeneralCoordSystem<T>{
+        GeneralCoordSystem{
+            id,
+            parent_coord_system,
+            origin
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
-    use crate::physics::coordinate_system::{WorldCoordSystem, CoordinateSystem};
+    use crate::physics::coordinate_system::{WorldCoordSystem, CoordinateSystem, GeneralCoordSystem};
     use crate::physics::polar_vector::PolarVec;
 
     #[test]
@@ -84,6 +94,17 @@ mod tests {
         let b = WorldCoordSystem::new();
 
         assert_eq!(a,b);
+    }
+
+    #[test]
+    fn creation(){
+        let wcs = WorldCoordSystem::new();
+        let origin = PolarVec::new(10.0,90.0,90.0);
+        let gcs = GeneralCoordSystem::new("gcs".to_string(), wcs, origin);
+
+        println!("{:?}", wcs);
+        println!("{:?}", origin);
+        println!("{:?}", gcs);
     }
 }
 
