@@ -120,13 +120,14 @@ impl PolarVec {
 }
 
 #[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq)]
-pub struct VectorPoint<T> where T: CoordinateSystem {
-    cord_sys: T,
+pub struct VectorPoint<'a, T>
+    where T: CoordinateSystem {
+    cord_sys: &'a T,
     vector: PolarVec
 }
 
-impl<T: CoordinateSystem> VectorPoint<T> {
-    pub fn new (cord_sys: T, vector: PolarVec) -> VectorPoint<T>{
+impl<T: CoordinateSystem> VectorPoint<'_, T> {
+    pub fn new(cord_sys: &T, vector: PolarVec) -> VectorPoint<T>{
         VectorPoint{cord_sys, vector}
     }
 
