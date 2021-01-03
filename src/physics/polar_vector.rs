@@ -119,7 +119,7 @@ impl PolarVec {
     }
 }
 
-
+#[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq)]
 pub struct VectorPoint<T> where T: CoordinateSystem {
     cord_sys: T,
     vector: PolarVec
