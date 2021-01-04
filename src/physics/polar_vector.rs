@@ -4,6 +4,7 @@ use std::fmt::{Display, Formatter};
 use std::fmt;
 use crate::constants::WORLD_ORIGIN;
 use crate::physics::coordinate_system::{WorldCoordSystem, CoordinateSystem};
+use std::ops::Deref;
 
 
 #[derive(Debug, Copy, Clone)]
@@ -138,6 +139,18 @@ impl<T: CoordinateSystem> VectorPoint<'_, T> {
     pub fn get_vector(&self) -> &PolarVec {
         &self.vector
     }
+
+    //
+    //pub fn get_vector_point_in_parent(&self) -> Option<VectorPoint<T>>{
+    //    let pcs = match self.cord_sys.get_parent_coord_system(){
+    //        None => {return None}
+    //        Some(x) => {x}
+    //    };
+
+    //     let o_vector = *self.cord_sys.get_origin();
+
+
+    //}
 }
 
 #[cfg(test)]

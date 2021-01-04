@@ -1,6 +1,6 @@
 use super::polar_vector::PolarVec;
 pub trait CoordinateSystem: {
-    type CoSys;
+    type CoSys: CoordinateSystem;
 
     fn get_id(&self) -> &String;
 
@@ -8,7 +8,6 @@ pub trait CoordinateSystem: {
 
     fn get_parent_coord_system(&self) -> Option<&Self::CoSys>;
 }
-
 #[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq)]
 pub struct WorldCoordSystem {
     id: String,
@@ -20,6 +19,22 @@ impl CoordinateSystem for WorldCoordSystem {
 
     fn get_id(&self) -> &String {
         &self.id
+    }
+
+    fn get_origin(&self) -> &PolarVec {
+        &self.origin
+    }
+
+    fn get_parent_coord_system(&self) -> Option<&Self::CoSys> {
+        None
+    }
+}
+
+impl CoordinateSystem for &WorldCoordSystem {
+    type CoSys = WorldCoordSystem;
+
+    fn get_id(&self) -> &String {
+        &self.get_id()
     }
 
     fn get_origin(&self) -> &PolarVec {
