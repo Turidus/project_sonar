@@ -1,28 +1,96 @@
-use std::ptr::eq;
 use std::cmp::Ordering;
 use std::fmt::{Display, Formatter};
 use std::fmt;
 use crate::constants::WORLD_ORIGIN;
-use crate::physics::coordinate_system::{WorldCoordSystem, CoordinateSystem};
-use std::ops::Deref;
+
+#[derive(Debug, Copy, Clone, PartialOrd, PartialEq)]
+pub struct Vector {
+    x: f64,
+    y: f64,
+    z: f64
+}
+impl Eq for Vector{}
+
+impl Ord for Vector{
+    fn cmp(&self, other: &Self) -> Ordering {
+        return if self.eq(&other) {
+            Ordering::Equal
+        } else if self.x.ne(&other.x) {
+            if self.x > other.x {
+                Ordering::Greater
+            } else { Ordering::Less }
+        } else if self.y.ne(&other.y) {
+            if self.y > other.y {
+                Ordering::Greater
+            } else { Ordering::Less }
+        } else {
+            if self.z > other.z {
+                Ordering::Greater
+            } else { Ordering::Less }
+        }
+    }
+}
+
+impl Display for Vector {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        write!(f, "[X: {:?} m, Y: {:?} m, Z: {:?} m]", self.x, self.y, self.z)
+    }
+}
+
+impl Vector {
+    pub fn new(x: f64, y: f64, z: f64) -> Vector {
+        Vector{x,y,z}
+    }
+
+    pub fn get_world_origin() -> Vector {
+        let (x,y,z) = WORLD_ORIGIN;
+        Vector{x,y,z}
+    }
+
+    pub fn get_x(&self) -> f64 {
+        self.x
+    }
+    pub fn get_y(&self) -> f64 {
+        self.y
+    }
+    pub fn get_z(&self) -> f64 {
+        self.z
+    }
+
+    pub fn add(&self, other: &Self) -> Vector {
+        Vector {
+            x: self.x + other.x,
+            y: self.y + other.y,
+            z: self.z + other.z,
+        }
+    }
+
+    pub fn subtract(&self, other: &Self) -> Vector {
+        Vector {
+            x: self.x - other.x,
+            y: self.y - other.y,
+            z: self.z - other.z,
+        }
+    }
+
+    pub fn to_polar_vector(&self) -> PolarVec {
+        let r = (self.x.powi(2) + self.y.powi(2) + self.z.powi(2)).sqrt();
+        PolarVec {
+            r,
+            phi: self.y.atan2(self.x),
+            theta: (self.z / r).acos()
+        }
+    }
+}
 
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub struct PolarVec {
     r: f64, //radius in m and range 0..
-    phi: f64, //azimut angle in degree and range 0..360
-    theta: f64, //polar angle in degree and range 0..180
+    phi: f64, //azimut angle in rad and range 0..2*pi
+    theta: f64, //polar angle in rad and range 0..pi
 }
 
-impl PartialEq for PolarVec {
-    fn eq(&self, other: &Self) -> bool {
-        &self.r == &other.r && &self.phi == &other.phi && &self.theta == &other.theta
-    }
-
-    fn ne(&self, other: &Self) -> bool {
-        !eq(&self, &other)
-    }
-}
 impl Eq for PolarVec {}
 
 impl PartialOrd for PolarVec {
@@ -89,6 +157,14 @@ impl PolarVec {
         other.theta - self.theta
     }
 
+    pub fn to_vector(&self) -> Vector {
+        Vector {
+            x: self.r * self.phi.cos() * self.theta.sin(),
+            y: self.r * self.phi.sin() * self.theta.sin(),
+            z: self.r * self.theta.cos()
+        }
+    }
+
     //Transforms the given coordinates into unique coordinate system, to assure that two vectors
     //that have the same physical properties have also the values.
     //For example: (1,10,90), (1,370,90) and (1,370,270) are three different ways to describe the same vector.
@@ -120,44 +196,58 @@ impl PolarVec {
     }
 }
 
-#[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq)]
-pub struct VectorPoint<'a, T>
-    where T: CoordinateSystem {
-    cord_sys: &'a T,
-    vector: PolarVec
-}
-
-impl<T: CoordinateSystem> VectorPoint<'_, T> {
-    pub fn new(cord_sys: &T, vector: PolarVec) -> VectorPoint<T>{
-        VectorPoint{cord_sys, vector}
-    }
-
-    pub fn get_cord_sys(&self) -> &T {
-        &self.cord_sys
-    }
-
-    pub fn get_vector(&self) -> &PolarVec {
-        &self.vector
-    }
-
-    //
-    //pub fn get_vector_point_in_parent(&self) -> Option<VectorPoint<T>>{
-    //    let pcs = match self.cord_sys.get_parent_coord_system(){
-    //        None => {return None}
-    //        Some(x) => {x}
-    //    };
-
-    //     let o_vector = *self.cord_sys.get_origin();
-
-
-    //}
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
 
     mod vector {
+        use crate::physics::polar_vector::Vector;
+
+        #[test]
+        fn creation() {
+            let a = Vector::new(0.0, 0.0, 0.0);
+            let b = Vector::get_world_origin();
+
+            assert_eq!(a,b);
+        }
+
+        #[test]
+        fn getter() {
+            let a = Vector::new(10.0, 5.05, 6.0);
+
+            assert_eq!(10.0, a.get_x());
+            assert_eq!(5.05, a.get_y());
+            assert_eq!(6.0, a.get_z());
+        }
+
+        #[test]
+        fn add() {
+            let a = Vector::new(10.0, 5.05, 6.0);
+            let b = Vector::new(10.0, 5.05, 6.0);
+            let c = a.add(&b);
+            let d = Vector::new(20.0, 10.1, 12.0);
+            assert_eq!(d,c);
+        }
+
+        #[test]
+        fn substract() {
+            let a = Vector::new(10.0, 5.05, 6.0);
+            let b = Vector::new(5.0, 5.05, 8.0);
+            let c = a.subtract(&b);
+            let d = Vector::new(5.0, 0.0, -2.0);
+            assert_eq!(d,c);
+        }
+
+        #[test]
+        fn to_polar_vector() {
+            let a = Vector::new(10.0, 0.0, 0.0);
+            let b = a.to_polar_vector();
+
+            println!("{}", b)
+        }
+    }
+
+    mod polar_vector {
         use super::*;
 
         #[test]
@@ -236,6 +326,13 @@ mod tests {
         }
 
         #[test]
+        fn to_vector(){
+            let polar_vec_a = PolarVec::new(10.0, 90.0, 90.0);
+            let vec_a = polar_vec_a.to_vector();
+            println!("{}", vec_a)
+        }
+
+        #[test]
         fn test_partial_eq() {
             let a = PolarVec::new(1.0, 1.0, 1.0);
             let b = PolarVec::new(1.0, 1.0, 1.0);
@@ -287,20 +384,6 @@ mod tests {
         fn test_display(){
             let a = PolarVec::new(1.0, 1.0, 1.0);
             println!("{}", a)
-        }
-    }
-
-    mod vector_point {
-        use super::*;
-
-        #[test]
-        fn creation(){
-            let wcs = WorldCoordSystem::new();
-            let pv = PolarVec::new(10.0,90.0,90.0);
-            let vp = VectorPoint::new(&wcs, pv);
-
-            assert_eq!(&pv, vp.get_vector());
-            assert_eq!(&wcs, vp.get_cord_sys());
         }
     }
 }
