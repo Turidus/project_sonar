@@ -38,11 +38,4 @@
  *
  */
 
-mod constants;
-mod physics;
-mod utils;
-
-
-fn main() {
-    println!("Hello, world!");
-}
+pub mod helper_functions;

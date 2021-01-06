@@ -1,4 +1,4 @@
-use crate::physics::polar_vector::{PolarVec, Vector};
+use crate::physics::vectors::{PolarVec, Vector};
 use crate::physics::coordinate_system::CoordinateSystem;
 
 #[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq)]

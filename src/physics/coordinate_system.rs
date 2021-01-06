@@ -1,4 +1,4 @@
-use super::polar_vector::Vector;
+use super::vectors::Vector;
 
 pub trait CoordinateSystem: {
     type CoSys: CoordinateSystem;

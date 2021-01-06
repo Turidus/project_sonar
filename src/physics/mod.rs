@@ -1,3 +1,3 @@
-pub mod polar_vector;
+pub mod vectors;
 mod coordinate_system;
 mod vector_points;
