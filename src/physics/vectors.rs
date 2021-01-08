@@ -195,19 +195,33 @@ impl Vector {
 }
 
 
+
+
+
+/// A vector in spherical coordinates from three double (```f64```) values.
+/// * **r** is the radius
+/// * **phi** is the azimut angle in rad and range 0..2*pi
+/// * **theta** is the polar angle in rad and range 0..pi
 #[derive(Debug, Copy, Clone)]
 pub struct PolarVec {
-    r: f64, //radius in m and range 0..
-    phi: f64, //azimut angle in rad and range 0..2*pi
-    theta: f64, //polar angle in rad and range 0..pi
+    r: f64,
+    phi: f64,
+    theta: f64,
 }
 
 impl PartialEq for PolarVec {
+    /// Returns true if the difference between the values of self and other are smaller than [F64_DELTA].
+    /// # Examples
+    /// ```rust
+    /// let vec_1 = PolarVec::new(10.0, PI, FACT_PI_2 + (F64_DELTA/2));
+    /// let vec_2 = PolarVec::new(10.0, PI, FACT_PI_2);
+    /// assert_eq!(vec_1, vec_2);
+    /// ```
     fn eq(&self, other: &Self) -> bool {
         return {
-            (self.r == other.r) &&
-                equal_with_delta(self.phi, other.phi) &&
-                equal_with_delta(self.theta, other.theta)
+            equal_within_delta(self.r, other.r) &&
+                equal_within_delta(self.phi, other.phi) &&
+                equal_within_delta(self.theta, other.theta)
         }
     }
 }
@@ -247,25 +261,74 @@ impl Display for PolarVec {
 }
 
 impl PolarVec {
+    /// Generates a new PolarVector. Phi and Theta are in radiance units.
+    /// This Methode takes the input parameter and transform them into a unique expression. This
+    /// guarantees that there is only one version of every possible vector.
+    /// Following conventions are observed:
+    /// 1. If r == 0: phi == theta == 0.
+    /// 2. If theta == 0: phi == 0.
+    /// 3. r > 0
+    /// 4. phi is in range (0..2*pi]
+    /// 5. theta is in range (0..pi]
+    /// If the input parameters fall out these conventions, they are transformed to their equivalent
+    /// expression that observes the convention.
+    ///
+    /// # Examples
+    /// Generating a new vector:
+    /// ```rust
+    /// let pol_vec = PolarVec::new(10.0, PI, FRAC_PI_2);
+    /// ```
+    /// Generating a vector with non compliant parameters, with pol_vec1 being non complinat:
+    /// ```rust
+    /// let pol_vec1 = PolarVec::new(0.0, PI, FRAC_PI_2);
+    /// let pol_vec2 = PolarVec::new(0.0, 0.0, 0.0);
+    /// assert_eq!(pol_vec1, pol_vec2);
+    ///
+    /// let pol_vec1 = PolarVec::new(5.0, PI, 0);
+    /// let pol_vec2 = PolarVec::new(5.0, 0.0, 0.0);
+    /// assert_eq!(pol_vec1, pol_vec2);
+    ///
+    /// let pol_vec1 = PolarVec::new(-5.0, PI, FRAC_PI_2);
+    /// let pol_vec2 = PolarVec::new(5.0, 0.0, FRAC_PI_2);
+    /// assert_eq!(pol_vec1, pol_vec2);
+    ///
+    /// let pol_vec1 = PolarVec::new(5.0, 2.0 * PI + 0.1, FRAC_PI_2);
+    /// let pol_vec2 = PolarVec::new(5.0, 0.1, FRAC_PI_2);
+    /// assert_eq!(pol_vec1, pol_vec2);
+    ///
+    /// let pol_vec1 = PolarVec::new(5.0, PI, PI);
+    /// let pol_vec2 = PolarVec::new(5.0, 0.0, 0.0);
+    /// assert_eq!(pol_vec1, pol_vec2);
+    /// ```
+    ///
     pub fn new(r: f64, phi: f64, theta: f64) -> PolarVec {
         let (r,phi,theta) = PolarVec::get_uni_coords(r, phi, theta);
         PolarVec {r,phi,theta}
     }
 
+    /// Returns the vector based on [WORLD_ORIGIN], equal to calling
+    /// PolarVec::new(0.0, 0.0, 0.0);
+    /// # Examples
+    /// ```rust
+    /// let pol_vec1 = PolarVec::get_world_origin();
+    /// let pol_vec2 = PolarVec::new(0.0, 0.0, 0.0)
+    /// assert_eq!(pol_vec1, pol_vec2);
+    /// ```
+    /// [world origin]: GetLinkLocation
     pub fn get_world_origin() -> PolarVec {
         let (r,phi,theta) = WORLD_ORIGIN;
         let (r,phi,theta) = PolarVec::get_uni_coords(r, phi, theta);
         PolarVec {r,phi,theta}
     }
-
+    /// Returns the radius of the polar vector
     pub fn get_radius(&self) -> f64 {
         self.r
     }
-
+    /// Returns the azimut angle phi in rad
     pub fn get_phi_in_rad(&self) -> f64 {
         self.phi
     }
-
+    /// Returns the polar angle theta in rad
     pub fn get_theta_in_rad(&self) -> f64 {
         self.theta
     }
@@ -293,13 +356,14 @@ impl PolarVec {
         }
         if theta < 0.0 || theta >= PI {
             theta = theta.rem_euclid(PI);
+            phi = (phi + PI) % TAU;
         }
 
         if r == 0.0 {
             phi = 0.0;
             theta = 0.0;
         }
-        else if theta == 0.0 || theta == PI {
+        else if theta == 0.0 {
             phi = 0.0;
         }
 
@@ -399,10 +463,14 @@ mod tests {
             assert_eq!(a,b);
 
             let a = PolarVec::new(5.0, FRAC_PI_8, - FRAC_PI_4);
-            let b = PolarVec::new(5.0, FRAC_PI_8, PI - FRAC_PI_4);
+            let b = PolarVec::new(5.0, FRAC_PI_8 + PI, PI - FRAC_PI_4);
             assert_eq!(a,b);
 
             let a = PolarVec::new(5.0, FRAC_PI_8, PI + FRAC_PI_4);
+            let b = PolarVec::new(5.0, FRAC_PI_8 + PI, FRAC_PI_4);
+            assert_eq!(a,b);
+
+            let a = PolarVec::new(5.0, FRAC_PI_8 + PI, PI + FRAC_PI_4);
             let b = PolarVec::new(5.0, FRAC_PI_8, FRAC_PI_4);
             assert_eq!(a,b);
 
@@ -413,6 +481,10 @@ mod tests {
             let a = PolarVec::new(-5.0, PI + FRAC_PI_8, FRAC_PI_4);
             let b = PolarVec::new(5.0, FRAC_PI_8, FRAC_PI_2 + FRAC_PI_4);
             assert_eq!(a,b);
+
+            let pol_vec1 = PolarVec::new(5.0, TAU + 0.1, FRAC_PI_2);
+            let pol_vec2 = PolarVec::new(5.0, 0.1, FRAC_PI_2);
+            assert_eq!(pol_vec1, pol_vec2);
         }
 
         #[test]

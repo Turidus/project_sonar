@@ -42,7 +42,7 @@ use crate::constants::F64_DELTA;
 
 /// This function compares two double values and returns true, when the difference between
 /// them is smaller than [F64_DELTA]
-/// [F64_DELTA]: FindLinkLocation
-pub fn equal_with_delta(a: f64, b: f64) -> bool{
+/// [F64_DELTA]: GetLinkLocation
+pub fn equal_within_delta(a: f64, b: f64) -> bool{
     return (a-b).abs() < F64_DELTA
 }
