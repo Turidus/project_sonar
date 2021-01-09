@@ -195,9 +195,6 @@ impl Vector {
 }
 
 
-
-
-
 /// A vector in spherical coordinates from three double (```f64```) values.
 /// * **r** is the radius
 /// * **phi** is the azimut angle in rad and range 0..2*pi
@@ -332,15 +329,16 @@ impl PolarVec {
     pub fn get_theta_in_rad(&self) -> f64 {
         self.theta
     }
-
+    /// Returns self.phi - other.phi
     pub fn get_angle_difference_phi(&self, other: &Self) -> f64 {
         other.phi - self.phi
     }
-
+    /// Returns self.theta - other.theta
     pub fn get_angle_difference_theta(&self, other: &Self) -> f64 {
         other.theta - self.theta
     }
-
+    /// Returns a equivalent cartesian [Vector]
+    /// [Vector]: GetLinkLocation
     pub fn to_vector(&self) -> Vector {
         Vector {
             x: self.r * self.phi.cos() * self.theta.sin(),
