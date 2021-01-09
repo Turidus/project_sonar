@@ -47,29 +47,35 @@ impl<T: CoordinateSystem> PolarVectorPoint<'_, T> {
 mod tests {
     use super::*;
 
-    mod vector {
+    mod vector_point {
         use super::*;
-        use crate::physics::coordinate_system::WorldCoordSystem;
+        use crate::physics::coordinate_system::{WorldCoordSystem, GeneralCoordSystem};
 
         #[test]
         fn creation(){
             let wcs = WorldCoordSystem::new();
-            let pv = Vector::new(10.0,90.0,90.0);
-            let vp = VectorPoint::new(&wcs, pv);
+            let vec = Vector::new(10.0,90.0,90.0);
+            let vp = VectorPoint::new(&wcs, vec);
 
-            assert_eq!(&pv, vp.get_vector());
+            assert_eq!(&vec, vp.get_vector());
             assert_eq!(&wcs, vp.get_cord_sys());
+
+            let gcs = GeneralCoordSystem::new("gcs".to_string(), &wcs, vec);
+            let vp = VectorPoint::new(&gcs, vec);
+            assert_eq!(&vec, vp.get_vector());
+            assert_eq!(&gcs, vp.get_cord_sys());
         }
     }
 
-    mod vector_point {
+    mod polar_vector_point {
         use super::*;
         use crate::physics::coordinate_system::WorldCoordSystem;
+        use std::f64::consts::{PI, FRAC_PI_2};
 
         #[test]
         fn creation(){
             let wcs = WorldCoordSystem::new();
-            let pv = PolarVec::new(10.0,90.0,90.0);
+            let pv = PolarVec::new(10.0,PI,FRAC_PI_2);
             let vp = PolarVectorPoint::new(&wcs, pv);
 
             assert_eq!(&pv, vp.get_vector());
