@@ -1,6 +1,8 @@
 use crate::physics::vectors::{PolarVec, Vector};
 use crate::physics::coordinate_system::CoordinateSystem;
 
+/// This struct describes a point in space in a given coordinate system by
+/// using a cartesian vector.
 #[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq)]
 pub struct VectorPoint<'a, T>
     where T: CoordinateSystem {
@@ -9,19 +11,21 @@ pub struct VectorPoint<'a, T>
 }
 
 impl<T: CoordinateSystem> VectorPoint<'_, T> {
+    // Creates a new VectorPoint out of a coordinate system and a Vector.
     pub fn new(cord_sys: &T, vector: Vector) -> VectorPoint<T>{
         VectorPoint {cord_sys, vector}
     }
-
+    // Returns a reference to the coordinate system in which this VectorPoint is valid.
     pub fn get_cord_sys(&self) -> &T {
         &self.cord_sys
     }
-
+    // Returns the vector that defines the point
     pub fn get_vector(&self) -> &Vector {
         &self.vector
     }
 }
-
+/// This struct describes a point in space in a given coordinate system by
+/// using a polar vector.
 #[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq)]
 pub struct PolarVectorPoint<'a, T>
     where T: CoordinateSystem {
@@ -30,14 +34,15 @@ pub struct PolarVectorPoint<'a, T>
 }
 
 impl<T: CoordinateSystem> PolarVectorPoint<'_, T> {
+    // Creates a new VectorPoint out of a coordinate system and a PolarVector.
     pub fn new(cord_sys: &T, vector: PolarVec) -> PolarVectorPoint<T>{
         PolarVectorPoint {cord_sys, vector}
     }
-
+    // Returns a reference to the coordinate system in which this PolarVectorPoint is valid.
     pub fn get_cord_sys(&self) -> &T {
         &self.cord_sys
     }
-
+    // Returns the vector that defines the point
     pub fn get_vector(&self) -> &PolarVec {
         &self.vector
     }

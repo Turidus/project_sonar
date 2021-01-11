@@ -8,7 +8,10 @@ pub trait CoordinateSystem: {
     fn get_origin(&self) -> &Vector;
 
     fn get_parent_coord_system(&self) -> Option<&Self::CoSys>;
+
+    fn transform_vector_into_world_coords(&self, vec: &Vector) -> Vector;
 }
+
 #[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq)]
 pub struct WorldCoordSystem {
     id: String,
@@ -29,6 +32,10 @@ impl CoordinateSystem for WorldCoordSystem {
     fn get_parent_coord_system(&self) -> Option<&Self::CoSys> {
         None
     }
+
+    fn transform_vector_into_world_coords(&self, vec: &Vector) -> Vector {
+        *vec
+    }
 }
 
 impl CoordinateSystem for &WorldCoordSystem {
@@ -44,6 +51,10 @@ impl CoordinateSystem for &WorldCoordSystem {
 
     fn get_parent_coord_system(&self) -> Option<&Self::CoSys> {
         None
+    }
+
+    fn transform_vector_into_world_coords(&self, vec: &Vector) -> Vector {
+        *vec
     }
 }
 
@@ -77,6 +88,15 @@ impl<T: CoordinateSystem> CoordinateSystem for GeneralCoordSystem<'_, T>{
     fn get_parent_coord_system(&self) -> Option<&Self::CoSys> {
         Some(&self.parent_coord_system)
     }
+
+    fn transform_vector_into_world_coords(&self, vec: &Vector) -> Vector {
+        let temp_vec = &self.transform_vector_into_parent_coords(vec);
+        return match &self.parent_coord_system.get_parent_coord_system() {
+            None => {*temp_vec}
+            Some(x) => {x.transform_vector_into_world_coords(temp_vec)}
+        }
+    }
+
 }
 
 impl<T: CoordinateSystem> GeneralCoordSystem<'_, T>{
@@ -86,6 +106,13 @@ impl<T: CoordinateSystem> GeneralCoordSystem<'_, T>{
             parent_coord_system,
             origin
         }
+    }
+
+    fn transform_vector_into_parent_coords(&self, vec: &Vector) -> Vector {
+        let x = &self.origin.get_x() + vec.get_x();
+        let y = &self.origin.get_y() + vec.get_y();
+        let z = &self.origin.get_z() + vec.get_z();
+        Vector::new(x,y,z)
     }
 }
 
